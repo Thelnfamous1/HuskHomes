@@ -170,6 +170,14 @@ repositories {
     // flatDir {
     //     dir 'libs'
     // }
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -190,6 +198,16 @@ dependencies {
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
     // The group id is ignored when searching -- in this case, it is "blank"
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
+    implementation fg.deobf("curse.maven:luckperms-431733:3995676")
+    //implementation 'net.luckperms:api:5.4'
+
+    /* Original mod's dependencies, all Fabric-based
+    modImplementation include("eu.pb4:predicate-api:0.1.0+1.19.2")
+	modImplementation include("eu.pb4:placeholder-api:2.0.0-pre.1+1.19.2")
+	modImplementation include("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
+	modImplementation include("eu.pb4:player-data-api:0.2.2+1.19.2")
+     */
+    implementation fg.deobf("com.github.Thelnfamous1:PermissionsAPI:1.19.2-SNAPSHOT")
 
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
