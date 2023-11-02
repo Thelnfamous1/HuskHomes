@@ -19,6 +19,7 @@
 
 package net.william278.huskhomes.user;
 
+import io.netty.buffer.Unpooled;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.audience.Audience;
 import net.minecraft.core.BlockPos;
@@ -41,7 +42,7 @@ public class FabricUser extends OnlineUser {
     private final ServerPlayer player;
 
     private FabricUser(@NotNull FabricHuskHomes plugin, @NotNull ServerPlayer player) {
-        super(player.getUUID(), player.getEntityName());
+        super(player.getUUID(), player.getScoreboardName());
         this.plugin = plugin;
         this.player = player;
     }
@@ -90,7 +91,7 @@ public class FabricUser extends OnlineUser {
     @Override
     public boolean hasPermission(@NotNull String node) {
         final boolean requiresOp = Boolean.TRUE.equals(plugin.getPermissions().getOrDefault(node, true));
-        return Permissions.check(player, node, !requiresOp || player.hasPermissionLevel(3));
+        return Permissions.check(player, node, !requiresOp || player.hasPermissions(3));
     }
 
     @Override
@@ -116,7 +117,7 @@ public class FabricUser extends OnlineUser {
     @Override
     @NotNull
     public Audience getAudience() {
-        return player;
+        return (Audience) player; // Adventure's Fabric platform mixins Audience into ServerPlayer
     }
 
     @Override
@@ -136,7 +137,7 @@ public class FabricUser extends OnlineUser {
 
     @Override
     public void sendPluginMessage(@NotNull String channel, byte[] message) {
-        final FriendlyByteBuf buf = FriendlyByteBuf.create();
+        final FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         buf.writeBytes(message);
         final ClientboundCustomPayloadPacket packet = new ClientboundCustomPayloadPacket(parseIdentifier(channel), buf);
         player.connection.send(packet);

@@ -19,21 +19,23 @@
 
 package net.william278.huskhomes;
 
+import com.mojang.brigadier.CommandDispatcher;
 import io.netty.buffer.ByteBufUtil;
-import net.fabricmc.api.DedicatedServerModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import me.Thelnfamous1.huskhomes.HuskHomesMod;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.kyori.adventure.platform.fabric.FabricServerAudiences;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraftforge.common.util.MavenVersionStringHelper;
 import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.william278.annotaml.Annotaml;
 import net.william278.desertwell.util.Version;
 import net.william278.huskhomes.command.Command;
@@ -82,8 +84,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes,
-        FabricTaskRunner, FabricEventDispatcher, FabricSafetyResolver, ServerPlayNetworking.PlayChannelHandler {
+public class FabricHuskHomes implements HuskHomes,
+        FabricTaskRunner, FabricEventDispatcher, FabricSafetyResolver{
 
     public static final Logger LOGGER = LoggerFactory.getLogger("HuskHomes");
     private static FabricHuskHomes instance;
@@ -94,7 +96,7 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
     }
 
     private final ModContainer modContainer = FabricLoader.getInstance()
-            .getModContainer("huskhomes").orElseThrow(() -> new RuntimeException("Failed to get Mod Container"));
+            .getModContainer(HuskHomesMod.MODID).orElseThrow(() -> new RuntimeException("Failed to get Mod Container"));
     private MinecraftServer minecraftServer;
     private ConcurrentHashMap<Integer, CompletableFuture<?>> tasks;
     private Map<String, Boolean> permissions;
@@ -117,7 +119,7 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
     private Broker broker;
     private FabricServerAudiences audiences;
 
-    @Override
+    //@Override
     public void onInitializeServer() {
         // Set instance
         instance = this;
@@ -137,17 +139,21 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
             }
         });
 
-        // Pre-register commands
-        initialize("commands", (plugin) -> this.commands = registerCommands());
-
+        /*
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             this.minecraftServer = server;
             this.onEnable();
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> this.onDisable());
+         */
     }
 
-    private void onEnable() {
+    public void onCommandRegistration(CommandDispatcher<CommandSourceStack> dispatcher){
+        // Pre-register commands
+        initialize("commands", (plugin) -> this.commands = registerCommands(dispatcher));
+    }
+
+    public void onEnable() {
         // Create adventure audience
         this.audiences = FabricServerAudiences.of(minecraftServer);
 
@@ -195,7 +201,7 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
         this.checkForUpdates();
     }
 
-    private void onDisable() {
+    public void onDisable() {
         if (this.eventListener != null) {
             this.eventListener.handlePluginDisable();
         }
@@ -374,7 +380,8 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
     @Override
     @NotNull
     public File getDataFolder() {
-        return FabricLoader.getInstance().getConfigDir().resolve("huskhomes").toFile();
+        return FMLPaths.CONFIGDIR.get().resolve(HuskHomesMod.MODID).toFile();
+        //return FabricLoader.getInstance().getConfigDir().resolve("huskhomes").toFile();
     }
 
     @Override
@@ -382,7 +389,7 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
     public List<World> getWorlds() {
         final List<World> worlds = new ArrayList<>();
         minecraftServer.getAllLevels().forEach(world -> worlds.add(World.from(
-                world.dimension().getValue().asString(),
+                world.dimension().location().toString(),
                 UUID.nameUUIDFromBytes(world.dimension().location().toString().getBytes())
         )));
         return worlds;
@@ -391,7 +398,7 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
     @Override
     @NotNull
     public Version getVersion() {
-        return Version.fromString(modContainer.getMetadata().getVersion().getFriendlyString(), "-");
+        return Version.fromString(MavenVersionStringHelper.artifactVersionToString(modContainer.getModInfo().getVersion()), "-");
     }
 
     @Override
@@ -401,21 +408,20 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
     }
 
     @NotNull
-    public List<Command> registerCommands() {
+    private List<Command> registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
         final List<Command> commands = Arrays.stream(FabricCommand.Type.values())
                 .map(FabricCommand.Type::getCommand)
                 .filter(command -> !settings.isCommandDisabled(command))
                 .toList();
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, ignored, ignored2) ->
-                commands.forEach(command -> new FabricCommand(command, this).register(dispatcher)));
+        commands.forEach(command -> new FabricCommand(command, this).register(dispatcher));
 
         return commands;
     }
 
     @Override
     public boolean isDependencyLoaded(@NotNull String name) {
-        return FabricLoader.getInstance().isModLoaded(name);
+        return ModList.get().isLoaded(name);
     }
 
     @Override
@@ -441,7 +447,7 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
     }
 
     // When the server receives a plugin message
-    @Override
+    //@Override
     public void receive(@NotNull MinecraftServer server, @NotNull ServerPlayer player,
                         @NotNull ServerGamePacketListenerImpl handler, @NotNull FriendlyByteBuf buf,
                         @NotNull PacketSender responseSender) {
@@ -472,6 +478,10 @@ public class FabricHuskHomes implements DedicatedServerModInitializer, HuskHomes
     @NotNull
     public Map<String, Boolean> getPermissions() {
         return permissions;
+    }
+
+    public void setMinecraftServer(MinecraftServer minecraftServer) {
+        this.minecraftServer = minecraftServer;
     }
 
     @NotNull

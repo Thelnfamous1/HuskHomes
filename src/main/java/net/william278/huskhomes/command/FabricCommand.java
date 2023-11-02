@@ -22,9 +22,7 @@ package net.william278.huskhomes.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import me.lucko.fabric.api.permissions.v0.PermissionCheckEvent;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import net.william278.huskhomes.FabricHuskHomes;
@@ -66,12 +64,14 @@ public class FabricCommand {
         // Register additional permissions
         final Map<String, Boolean> permissions = command.getAdditionalPermissions();
         permissions.forEach((permission, isOp) -> plugin.getPermissions().put(permission, isOp));
+        /* TODO: May need to implement "events" into PermissionsAPI port
         PermissionCheckEvent.EVENT.register((player, node) -> {
             if (permissions.containsKey(node) && permissions.get(node) && player.hasPermissionLevel(3)) {
                 return TriState.TRUE;
             }
             return TriState.DEFAULT;
         });
+         */
 
         // Register aliases
         final LiteralCommandNode<CommandSourceStack> node = dispatcher.register(builder);

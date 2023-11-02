@@ -19,7 +19,6 @@
 
 package net.william278.huskhomes.event;
 
-import net.minecraft.util.ActionResult;
 import net.minecraft.world.InteractionResult;
 import net.william278.huskhomes.FabricHuskHomes;
 import net.william278.huskhomes.position.Home;
