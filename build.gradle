@@ -253,12 +253,18 @@ dependencies {
     implementation fg.deobf("curse.maven:luckperms-431733:3995676")
     implementation fg.deobf("com.github.Thelnfamous1:PermissionsAPI:1.19.2-SNAPSHOT")
 
-    //implementation include('redis.clients:jedis:' + jedis_version)
+    //implementation include("redis.clients:jedis:$jedis_version")
     implementation fg.deobf("redis.clients:jedis:${jedis_version}")
-    //implementation include('com.mysql:mysql-connector-j:' + mysql_driver_version)
+    //implementation include("org.apache.commons:commons-pool2:$commons_pool_version")
+    implementation fg.deobf("org.apache.commons:commons-pool2:${commons_pool_version}")
+    //implementation include("com.mysql:mysql-connector-j:$mysql_driver_version")
     implementation fg.deobf("com.mysql:mysql-connector-j:${mysql_driver_version}")
-    //implementation include('org.xerial:sqlite-jdbc:' + sqlite_driver_version)
+    //implementation include("org.mariadb.jdbc:mariadb-java-client:$mariadb_driver_version")
+    implementation fg.deobf("org.mariadb.jdbc:mariadb-java-client:${mariadb_driver_version}")
+    //implementation include("org.xerial:sqlite-jdbc:$sqlite_driver_version")
     implementation fg.deobf("org.xerial:sqlite-jdbc:${sqlite_driver_version}")
+    //implementation include("com.h2database:h2:$h2_driver_version")
+    implementation fg.deobf("com.h2database:h2:${h2_driver_version}")
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
