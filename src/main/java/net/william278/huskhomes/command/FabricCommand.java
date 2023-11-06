@@ -22,9 +22,12 @@ package net.william278.huskhomes.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import me.infamous.permissions.PermissionCheckEvent;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.luckperms.api.util.Tristate;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.common.MinecraftForge;
 import net.william278.huskhomes.FabricHuskHomes;
 import net.william278.huskhomes.teleport.TeleportRequest;
 import net.william278.huskhomes.user.CommandUser;
@@ -62,16 +65,13 @@ public class FabricCommand {
         }
 
         // Register additional permissions
-        final Map<String, Boolean> permissions = command.getAdditionalPermissions();
-        permissions.forEach((permission, isOp) -> plugin.getPermissions().put(permission, isOp));
-        /* TODO: May need to implement "events" into PermissionsAPI port
-        PermissionCheckEvent.EVENT.register((player, node) -> {
-            if (permissions.containsKey(node) && permissions.get(node) && player.hasPermissionLevel(3)) {
-                return TriState.TRUE;
+        MinecraftForge.EVENT_BUS.addListener((PermissionCheckEvent event) -> {
+            final Map<String, Boolean> permissions = this.command.getAdditionalPermissions();
+            permissions.forEach((permission, isOp) -> this.plugin.getPermissions().put(permission, isOp));
+            if (permissions.containsKey(event.getPermission()) && permissions.get(event.getPermission()) && event.getSource().hasPermission(3)) {
+                event.setState(Tristate.TRUE);
             }
-            return TriState.DEFAULT;
         });
-         */
 
         // Register aliases
         final LiteralCommandNode<CommandSourceStack> node = dispatcher.register(builder);
