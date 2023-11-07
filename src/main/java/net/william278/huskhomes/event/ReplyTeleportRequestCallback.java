@@ -19,8 +19,8 @@
 
 package net.william278.huskhomes.event;
 
-import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.world.InteractionResult;
+import me.Thelnfamous1.huskhomes.event.ForgeHuskHomesEvent;
+import me.Thelnfamous1.huskhomes.event.ReplyTeleportRequestEvent;
 import net.william278.huskhomes.teleport.TeleportRequest;
 import net.william278.huskhomes.user.OnlineUser;
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +29,7 @@ import java.util.function.BiFunction;
 
 public interface ReplyTeleportRequestCallback extends FabricEventCallback<IReplyTeleportRequestEvent> {
 
+    /*
     @NotNull
     Event<ReplyTeleportRequestCallback> EVENT = EventFactory.createArrayBacked(ReplyTeleportRequestCallback.class,
             (listeners) -> (event) -> {
@@ -44,6 +45,7 @@ public interface ReplyTeleportRequestCallback extends FabricEventCallback<IReply
 
                 return InteractionResult.PASS;
             });
+     */
 
     @NotNull
     BiFunction<OnlineUser, TeleportRequest, IReplyTeleportRequestEvent> SUPPLIER = (recipient, request) ->
@@ -73,8 +75,8 @@ public interface ReplyTeleportRequestCallback extends FabricEventCallback<IReply
                 }
 
                 @NotNull
-                public Event<ReplyTeleportRequestCallback> getEvent() {
-                    return EVENT;
+                public ForgeHuskHomesEvent<IReplyTeleportRequestEvent> getEvent() {
+                    return new ReplyTeleportRequestEvent(this);
                 }
 
             };

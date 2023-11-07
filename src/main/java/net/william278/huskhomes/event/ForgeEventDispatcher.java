@@ -19,8 +19,10 @@
 
 package net.william278.huskhomes.event;
 
+import me.Thelnfamous1.huskhomes.event.ForgeHuskHomesEvent;
 import net.minecraft.world.InteractionResult;
-import net.william278.huskhomes.FabricHuskHomes;
+import net.minecraftforge.common.MinecraftForge;
+import net.william278.huskhomes.ForgeHuskHomes;
 import net.william278.huskhomes.position.Home;
 import net.william278.huskhomes.position.Position;
 import net.william278.huskhomes.position.Warp;
@@ -37,19 +39,18 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.logging.Level;
 
-public interface FabricEventDispatcher extends EventDispatcher {
+public interface ForgeEventDispatcher extends EventDispatcher {
 
     @SuppressWarnings("unchecked")
     @Override
-    default <T extends Event> boolean fireIsCancelled(@NotNull T event) {
+    default <T extends HuskHomesEvent> boolean fireIsCancelled(@NotNull T event) {
         try {
             final Method field = event.getClass().getDeclaredMethod("getEvent");
             field.setAccessible(true);
 
-            net.fabricmc.fabric.api.event.Event<?> fabricEvent = (net.fabricmc.fabric.api.event.Event<?>) field.invoke(event);
-
-            final FabricEventCallback<T> invoker = (FabricEventCallback<T>) fabricEvent.invoker();
-            return invoker.invoke(event) == InteractionResult.FAIL;
+            ForgeHuskHomesEvent<T> forgeEvent = (ForgeHuskHomesEvent<T>) field.invoke(event);
+            MinecraftForge.EVENT_BUS.post(forgeEvent);
+            return forgeEvent.getInvokeResult() == InteractionResult.FAIL;
         } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
             getPlugin().log(Level.WARNING, "Failed to fire event (" + event.getClass().getName() + ")", e);
             return false;
@@ -133,6 +134,6 @@ public interface FabricEventDispatcher extends EventDispatcher {
 
     @Override
     @NotNull
-    FabricHuskHomes getPlugin();
+    ForgeHuskHomes getPlugin();
 
 }

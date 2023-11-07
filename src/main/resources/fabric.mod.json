@@ -23,7 +23,7 @@
   "environment": "server",
   "entrypoints": {
     "server": [
-      "net.william278.huskhomes.FabricHuskHomes"
+      "net.william278.huskhomes.ForgeHuskHomes"
     ]
   },
   "depends": {

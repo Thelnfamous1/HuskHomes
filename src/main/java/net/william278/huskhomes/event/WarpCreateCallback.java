@@ -19,8 +19,8 @@
 
 package net.william278.huskhomes.event;
 
-import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.world.InteractionResult;
+import me.Thelnfamous1.huskhomes.event.ForgeHuskHomesEvent;
+import me.Thelnfamous1.huskhomes.event.WarpCreateEvent;
 import net.william278.huskhomes.position.Position;
 import net.william278.huskhomes.user.CommandUser;
 import org.apache.commons.lang3.function.TriFunction;
@@ -28,8 +28,9 @@ import org.jetbrains.annotations.NotNull;
 
 public interface WarpCreateCallback extends FabricEventCallback<IWarpCreateEvent> {
 
+    /*
     @NotNull
-    Event<WarpCreateCallback> EVENT = EventFactory.createArrayBacked(WarpCreateCallback.class,
+    HuskHomesEvent<WarpCreateCallback> EVENT = EventFactory.createArrayBacked(WarpCreateCallback.class,
             (listeners) -> (event) -> {
                 for (WarpCreateCallback listener : listeners) {
                     final InteractionResult result = listener.invoke(event);
@@ -43,6 +44,7 @@ public interface WarpCreateCallback extends FabricEventCallback<IWarpCreateEvent
 
                 return InteractionResult.PASS;
             });
+     */
 
     @NotNull
     TriFunction<String, Position, CommandUser, IWarpCreateEvent> SUPPLIER = (name, position, creator) ->
@@ -88,8 +90,8 @@ public interface WarpCreateCallback extends FabricEventCallback<IWarpCreateEvent
                 }
 
                 @NotNull
-                public Event<WarpCreateCallback> getEvent() {
-                    return EVENT;
+                public ForgeHuskHomesEvent<IWarpCreateEvent> getEvent() {
+                    return new WarpCreateEvent(this);
                 }
 
             };

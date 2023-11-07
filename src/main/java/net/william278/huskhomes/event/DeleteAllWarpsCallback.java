@@ -19,8 +19,8 @@
 
 package net.william278.huskhomes.event;
 
-import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.world.InteractionResult;
+import me.Thelnfamous1.huskhomes.event.DeleteAllWarpsEvent;
+import me.Thelnfamous1.huskhomes.event.ForgeHuskHomesEvent;
 import net.william278.huskhomes.user.CommandUser;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,6 +28,7 @@ import java.util.function.Function;
 
 public interface DeleteAllWarpsCallback extends FabricEventCallback<IDeleteAllWarpsEvent> {
 
+    /*
     @NotNull
     Event<DeleteAllWarpsCallback> EVENT = EventFactory.createArrayBacked(DeleteAllWarpsCallback.class,
             (listeners) -> (event) -> {
@@ -43,6 +44,7 @@ public interface DeleteAllWarpsCallback extends FabricEventCallback<IDeleteAllWa
 
                 return InteractionResult.PASS;
             });
+     */
 
     @NotNull
     Function<CommandUser, IDeleteAllWarpsEvent> SUPPLIER = (deleter) ->
@@ -66,8 +68,8 @@ public interface DeleteAllWarpsCallback extends FabricEventCallback<IDeleteAllWa
                 }
 
                 @NotNull
-                public Event<DeleteAllWarpsCallback> getEvent() {
-                    return EVENT;
+                public ForgeHuskHomesEvent<IDeleteAllWarpsEvent> getEvent() {
+                    return new DeleteAllWarpsEvent(this);
                 }
             };
 

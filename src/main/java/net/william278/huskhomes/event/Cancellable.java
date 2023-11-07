@@ -22,7 +22,7 @@ package net.william278.huskhomes.event;
 /**
  * Base interface for a cancellable event
  */
-public interface Cancellable extends Event {
+public interface Cancellable extends HuskHomesEvent {
 
     /**
      * Set whether the event should be canceled

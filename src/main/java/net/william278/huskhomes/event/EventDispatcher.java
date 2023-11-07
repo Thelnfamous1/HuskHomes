@@ -47,7 +47,7 @@ public interface EventDispatcher {
      * @param callback The callback to run after the event has been fired
      * @param <T>      The type of event to fire
      */
-    default <T extends Event> void fireEvent(@NotNull T event, @Nullable Consumer<T> callback) {
+    default <T extends HuskHomesEvent> void fireEvent(@NotNull T event, @Nullable Consumer<T> callback) {
         getPlugin().runSync(() -> {
             if (!fireIsCancelled(event) && callback != null) {
                 getPlugin().runAsync(() -> callback.accept(event));
@@ -62,7 +62,7 @@ public interface EventDispatcher {
      * @param <T>   The type of event to fire
      * @return Whether the event was canceled
      */
-    <T extends Event> boolean fireIsCancelled(@NotNull T event);
+    <T extends HuskHomesEvent> boolean fireIsCancelled(@NotNull T event);
 
     ITeleportEvent getTeleportEvent(@NotNull Teleport teleport);
 

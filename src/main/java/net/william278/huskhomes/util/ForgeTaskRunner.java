@@ -19,13 +19,13 @@
 
 package net.william278.huskhomes.util;
 
-import net.william278.huskhomes.FabricHuskHomes;
+import net.william278.huskhomes.ForgeHuskHomes;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-public interface FabricTaskRunner extends TaskRunner {
+public interface ForgeTaskRunner extends TaskRunner {
 
 
     @Override
@@ -101,6 +101,6 @@ public interface FabricTaskRunner extends TaskRunner {
 
     @Override
     @NotNull
-    FabricHuskHomes getPlugin();
+    ForgeHuskHomes getPlugin();
 
 }

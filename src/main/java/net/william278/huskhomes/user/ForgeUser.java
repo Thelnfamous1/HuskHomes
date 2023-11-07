@@ -28,7 +28,7 @@ import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.william278.huskhomes.FabricHuskHomes;
+import net.william278.huskhomes.ForgeHuskHomes;
 import net.william278.huskhomes.position.Location;
 import net.william278.huskhomes.position.Position;
 import net.william278.huskhomes.position.World;
@@ -37,19 +37,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class FabricUser extends OnlineUser {
-    private final FabricHuskHomes plugin;
+public class ForgeUser extends OnlineUser {
+    private final ForgeHuskHomes plugin;
     private final ServerPlayer player;
 
-    private FabricUser(@NotNull FabricHuskHomes plugin, @NotNull ServerPlayer player) {
+    private ForgeUser(@NotNull ForgeHuskHomes plugin, @NotNull ServerPlayer player) {
         super(player.getUUID(), player.getScoreboardName());
         this.plugin = plugin;
         this.player = player;
     }
 
     @NotNull
-    public static FabricUser adapt(@NotNull FabricHuskHomes plugin, @NotNull ServerPlayer player) {
-        return new FabricUser(plugin, player);
+    public static ForgeUser adapt(@NotNull ForgeHuskHomes plugin, @NotNull ServerPlayer player) {
+        return new ForgeUser(plugin, player);
     }
 
     @Override

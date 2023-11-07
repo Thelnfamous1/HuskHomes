@@ -28,10 +28,10 @@ import net.luckperms.api.util.Tristate;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
-import net.william278.huskhomes.FabricHuskHomes;
+import net.william278.huskhomes.ForgeHuskHomes;
 import net.william278.huskhomes.teleport.TeleportRequest;
 import net.william278.huskhomes.user.CommandUser;
-import net.william278.huskhomes.user.FabricUser;
+import net.william278.huskhomes.user.ForgeUser;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -43,10 +43,10 @@ import static net.minecraft.commands.Commands.literal;
 
 public class FabricCommand {
 
-    private final FabricHuskHomes plugin;
+    private final ForgeHuskHomes plugin;
     private final Command command;
 
-    public FabricCommand(@NotNull Command command, @NotNull FabricHuskHomes plugin) {
+    public FabricCommand(@NotNull Command command, @NotNull ForgeHuskHomes plugin) {
         this.command = command;
         this.plugin = plugin;
     }
@@ -113,7 +113,7 @@ public class FabricCommand {
 
     private CommandUser resolveExecutor(@NotNull CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
-            return FabricUser.adapt(plugin, player);
+            return ForgeUser.adapt(plugin, player);
         }
         return plugin.getConsole();
     }
@@ -123,33 +123,33 @@ public class FabricCommand {
      * Commands available on the Fabric HuskHomes implementation
      */
     public enum Type {
-        HOME_COMMAND(new PrivateHomeCommand(FabricHuskHomes.getInstance())),
-        SET_HOME_COMMAND(new SetHomeCommand(FabricHuskHomes.getInstance())),
-        HOME_LIST_COMMAND(new PrivateHomeListCommand(FabricHuskHomes.getInstance())),
-        DEL_HOME_COMMAND(new DelHomeCommand(FabricHuskHomes.getInstance())),
-        EDIT_HOME_COMMAND(new EditHomeCommand(FabricHuskHomes.getInstance())),
-        PUBLIC_HOME_COMMAND(new PublicHomeCommand(FabricHuskHomes.getInstance())),
-        PUBLIC_HOME_LIST_COMMAND(new PublicHomeListCommand(FabricHuskHomes.getInstance())),
-        WARP_COMMAND(new WarpCommand(FabricHuskHomes.getInstance())),
-        SET_WARP_COMMAND(new SetWarpCommand(FabricHuskHomes.getInstance())),
-        WARP_LIST_COMMAND(new WarpListCommand(FabricHuskHomes.getInstance())),
-        DEL_WARP_COMMAND(new DelWarpCommand(FabricHuskHomes.getInstance())),
-        EDIT_WARP_COMMAND(new EditWarpCommand(FabricHuskHomes.getInstance())),
-        TP_COMMAND(new TpCommand(FabricHuskHomes.getInstance())),
-        TP_HERE_COMMAND(new TpHereCommand(FabricHuskHomes.getInstance())),
-        TPA_COMMAND(new TeleportRequestCommand(FabricHuskHomes.getInstance(), TeleportRequest.Type.TPA)),
-        TPA_HERE_COMMAND(new TeleportRequestCommand(FabricHuskHomes.getInstance(), TeleportRequest.Type.TPA_HERE)),
-        TPACCEPT_COMMAND(new TpRespondCommand(FabricHuskHomes.getInstance(), true)),
-        TPDECLINE_COMMAND(new TpRespondCommand(FabricHuskHomes.getInstance(), false)),
-        RTP_COMMAND(new RtpCommand(FabricHuskHomes.getInstance())),
-        TP_IGNORE_COMMAND(new TpIgnoreCommand(FabricHuskHomes.getInstance())),
-        TP_OFFLINE_COMMAND(new TpOfflineCommand(FabricHuskHomes.getInstance())),
-        TP_ALL_COMMAND(new TpAllCommand(FabricHuskHomes.getInstance())),
-        TPA_ALL_COMMAND(new TpaAllCommand(FabricHuskHomes.getInstance())),
-        SPAWN_COMMAND(new SpawnCommand(FabricHuskHomes.getInstance())),
-        SET_SPAWN_COMMAND(new SetSpawnCommand(FabricHuskHomes.getInstance())),
-        BACK_COMMAND(new BackCommand(FabricHuskHomes.getInstance())),
-        HUSKHOMES_COMMAND(new HuskHomesCommand(FabricHuskHomes.getInstance()));
+        HOME_COMMAND(new PrivateHomeCommand(ForgeHuskHomes.getInstance())),
+        SET_HOME_COMMAND(new SetHomeCommand(ForgeHuskHomes.getInstance())),
+        HOME_LIST_COMMAND(new PrivateHomeListCommand(ForgeHuskHomes.getInstance())),
+        DEL_HOME_COMMAND(new DelHomeCommand(ForgeHuskHomes.getInstance())),
+        EDIT_HOME_COMMAND(new EditHomeCommand(ForgeHuskHomes.getInstance())),
+        PUBLIC_HOME_COMMAND(new PublicHomeCommand(ForgeHuskHomes.getInstance())),
+        PUBLIC_HOME_LIST_COMMAND(new PublicHomeListCommand(ForgeHuskHomes.getInstance())),
+        WARP_COMMAND(new WarpCommand(ForgeHuskHomes.getInstance())),
+        SET_WARP_COMMAND(new SetWarpCommand(ForgeHuskHomes.getInstance())),
+        WARP_LIST_COMMAND(new WarpListCommand(ForgeHuskHomes.getInstance())),
+        DEL_WARP_COMMAND(new DelWarpCommand(ForgeHuskHomes.getInstance())),
+        EDIT_WARP_COMMAND(new EditWarpCommand(ForgeHuskHomes.getInstance())),
+        TP_COMMAND(new TpCommand(ForgeHuskHomes.getInstance())),
+        TP_HERE_COMMAND(new TpHereCommand(ForgeHuskHomes.getInstance())),
+        TPA_COMMAND(new TeleportRequestCommand(ForgeHuskHomes.getInstance(), TeleportRequest.Type.TPA)),
+        TPA_HERE_COMMAND(new TeleportRequestCommand(ForgeHuskHomes.getInstance(), TeleportRequest.Type.TPA_HERE)),
+        TPACCEPT_COMMAND(new TpRespondCommand(ForgeHuskHomes.getInstance(), true)),
+        TPDECLINE_COMMAND(new TpRespondCommand(ForgeHuskHomes.getInstance(), false)),
+        RTP_COMMAND(new RtpCommand(ForgeHuskHomes.getInstance())),
+        TP_IGNORE_COMMAND(new TpIgnoreCommand(ForgeHuskHomes.getInstance())),
+        TP_OFFLINE_COMMAND(new TpOfflineCommand(ForgeHuskHomes.getInstance())),
+        TP_ALL_COMMAND(new TpAllCommand(ForgeHuskHomes.getInstance())),
+        TPA_ALL_COMMAND(new TpaAllCommand(ForgeHuskHomes.getInstance())),
+        SPAWN_COMMAND(new SpawnCommand(ForgeHuskHomes.getInstance())),
+        SET_SPAWN_COMMAND(new SetSpawnCommand(ForgeHuskHomes.getInstance())),
+        BACK_COMMAND(new BackCommand(ForgeHuskHomes.getInstance())),
+        HUSKHOMES_COMMAND(new HuskHomesCommand(ForgeHuskHomes.getInstance()));
 
         private final Command command;
 

@@ -19,9 +19,9 @@
 
 package net.william278.huskhomes.event;
 
-import net.fabricmc.fabric.api.event.EventFactory;
+import me.Thelnfamous1.huskhomes.event.ForgeHuskHomesEvent;
+import me.Thelnfamous1.huskhomes.event.HomeCreateEvent;
 import net.minecraft.data.models.blockstates.PropertyDispatch;
-import net.minecraft.world.InteractionResult;
 import net.william278.huskhomes.position.Position;
 import net.william278.huskhomes.user.CommandUser;
 import net.william278.huskhomes.user.User;
@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 
 public interface HomeCreateCallback extends FabricEventCallback<IHomeCreateEvent> {
 
+    /*
     @NotNull
     Event<HomeCreateCallback> EVENT = EventFactory.createArrayBacked(HomeCreateCallback.class,
             (listeners) -> (event) -> {
@@ -44,6 +45,7 @@ public interface HomeCreateCallback extends FabricEventCallback<IHomeCreateEvent
 
                 return InteractionResult.PASS;
             });
+     */
 
     @NotNull
     PropertyDispatch.QuadFunction<User, String, Position, CommandUser, IHomeCreateEvent> SUPPLIER = (user, name, position, creator) ->
@@ -94,8 +96,8 @@ public interface HomeCreateCallback extends FabricEventCallback<IHomeCreateEvent
                 }
 
                 @NotNull
-                public Event<HomeCreateCallback> getEvent() {
-                    return EVENT;
+                public ForgeHuskHomesEvent<IHomeCreateEvent> getEvent() {
+                    return new HomeCreateEvent(this);
                 }
             };
 

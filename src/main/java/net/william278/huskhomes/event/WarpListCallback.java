@@ -19,8 +19,8 @@
 
 package net.william278.huskhomes.event;
 
-import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.world.InteractionResult;
+import me.Thelnfamous1.huskhomes.event.ForgeHuskHomesEvent;
+import me.Thelnfamous1.huskhomes.event.WarpListEvent;
 import net.william278.huskhomes.position.Warp;
 import net.william278.huskhomes.user.CommandUser;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +30,7 @@ import java.util.function.BiFunction;
 
 public interface WarpListCallback extends FabricEventCallback<IWarpListEvent> {
 
+    /*
     @NotNull
     Event<WarpListCallback> EVENT = EventFactory.createArrayBacked(WarpListCallback.class,
             (listeners) -> (event) -> {
@@ -45,6 +46,7 @@ public interface WarpListCallback extends FabricEventCallback<IWarpListEvent> {
 
                 return InteractionResult.PASS;
             });
+     */
 
     @NotNull
     BiFunction<List<Warp>, CommandUser, IWarpListEvent> SUPPLIER = (warps, viewer) ->
@@ -80,8 +82,8 @@ public interface WarpListCallback extends FabricEventCallback<IWarpListEvent> {
                 }
 
                 @NotNull
-                public Event<WarpListCallback> getEvent() {
-                    return EVENT;
+                public ForgeHuskHomesEvent<IWarpListEvent> getEvent() {
+                    return new WarpListEvent(this);
                 }
 
             };

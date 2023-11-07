@@ -28,18 +28,18 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
-import net.william278.huskhomes.FabricHuskHomes;
+import net.william278.huskhomes.ForgeHuskHomes;
 import net.william278.huskhomes.position.Location;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface FabricSafetyResolver extends SafetyResolver {
+public interface ForgeSafetyResolver extends SafetyResolver {
 
     @Override
     default CompletableFuture<Optional<Location>> findSafeGroundLocation(@NotNull Location location) {
-        final MinecraftServer server = ((FabricHuskHomes) getPlugin()).getMinecraftServer();
+        final MinecraftServer server = ((ForgeHuskHomes) getPlugin()).getMinecraftServer();
         final ResourceLocation worldId = ResourceLocation.tryParse(location.getWorld().getName());
 
         // Ensure the location is on a valid world

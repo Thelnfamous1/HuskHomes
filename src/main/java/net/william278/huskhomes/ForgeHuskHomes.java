@@ -20,22 +20,19 @@
 package net.william278.huskhomes;
 
 import com.mojang.brigadier.CommandDispatcher;
-import io.netty.buffer.ByteBufUtil;
 import me.Thelnfamous1.huskhomes.HuskHomesMod;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.fabricmc.loader.api.FabricLoader;
 import net.kyori.adventure.platform.fabric.FabricServerAudiences;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraftforge.common.util.MavenVersionStringHelper;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraftforge.forgespi.language.IModInfo;
+import net.minecraftforge.resource.PathPackResources;
+import net.minecraftforge.resource.ResourcePackLoader;
 import net.william278.annotaml.Annotaml;
 import net.william278.desertwell.util.Version;
 import net.william278.huskhomes.command.Command;
@@ -47,10 +44,10 @@ import net.william278.huskhomes.config.Spawn;
 import net.william278.huskhomes.database.Database;
 import net.william278.huskhomes.database.MySqlDatabase;
 import net.william278.huskhomes.database.SqLiteDatabase;
-import net.william278.huskhomes.event.FabricEventDispatcher;
+import net.william278.huskhomes.event.ForgeEventDispatcher;
 import net.william278.huskhomes.hook.Hook;
 import net.william278.huskhomes.listener.EventListener;
-import net.william278.huskhomes.listener.FabricEventListener;
+import net.william278.huskhomes.listener.ForgeEventListener;
 import net.william278.huskhomes.manager.Manager;
 import net.william278.huskhomes.network.Broker;
 import net.william278.huskhomes.network.PluginMessageBroker;
@@ -60,43 +57,43 @@ import net.william278.huskhomes.position.World;
 import net.william278.huskhomes.random.NormalDistributionEngine;
 import net.william278.huskhomes.random.RandomTeleportEngine;
 import net.william278.huskhomes.user.ConsoleUser;
-import net.william278.huskhomes.user.FabricUser;
+import net.william278.huskhomes.user.ForgeUser;
 import net.william278.huskhomes.user.OnlineUser;
 import net.william278.huskhomes.user.SavedUser;
-import net.william278.huskhomes.util.FabricSafetyResolver;
-import net.william278.huskhomes.util.FabricTaskRunner;
+import net.william278.huskhomes.util.ForgeSafetyResolver;
+import net.william278.huskhomes.util.ForgeTaskRunner;
 import net.william278.huskhomes.util.UnsafeBlocks;
 import net.william278.huskhomes.util.Validator;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.spi.LoggingEventBuilder;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public class FabricHuskHomes implements HuskHomes,
-        FabricTaskRunner, FabricEventDispatcher, FabricSafetyResolver{
+public class ForgeHuskHomes implements HuskHomes,
+        ForgeTaskRunner, ForgeEventDispatcher, ForgeSafetyResolver {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("HuskHomes");
-    private static FabricHuskHomes instance;
+    private static ForgeHuskHomes instance;
+    private static Method packResourceGetter;
 
     @NotNull
-    public static FabricHuskHomes getInstance() {
+    public static ForgeHuskHomes getInstance() {
         return instance;
     }
 
-    private final ModContainer modContainer = FabricLoader.getInstance()
-            .getModContainer(HuskHomesMod.MODID).orElseThrow(() -> new RuntimeException("Failed to get Mod Container"));
+    //private final ModContainer modContainer = FabricLoader.getInstance().getModContainer(HuskHomesMod.MODID).orElseThrow(() -> new RuntimeException("Failed to get Mod Container"));
     private MinecraftServer minecraftServer;
     private ConcurrentHashMap<Integer, CompletableFuture<?>> tasks;
     private Map<String, Boolean> permissions;
@@ -196,7 +193,7 @@ public class FabricHuskHomes implements HuskHomes,
         });
 
         // Register events
-        initialize("events", (plugin) -> this.eventListener = new FabricEventListener(this));
+        initialize("events", (plugin) -> this.eventListener = new ForgeEventListener(this));
 
         this.checkForUpdates();
     }
@@ -228,7 +225,7 @@ public class FabricHuskHomes implements HuskHomes,
     @NotNull
     public List<OnlineUser> getOnlineUsers() {
         return minecraftServer.getPlayerList().getPlayers()
-                .stream().map(user -> (OnlineUser) FabricUser.adapt(this, user))
+                .stream().map(user -> (OnlineUser) ForgeUser.adapt(this, user))
                 .toList();
     }
 
@@ -365,16 +362,26 @@ public class FabricHuskHomes implements HuskHomes,
     @Override
     @Nullable
     public InputStream getResource(@NotNull String name) {
-        return this.modContainer.findPath(name)
-                .map(path -> {
+        return ResourcePackLoader.getPackFor(HuskHomesMod.MODID)
+                .map(pack -> {
                     try {
-                        return Files.newInputStream(path);
-                    } catch (IOException e) {
-                        log(Level.WARNING, "Failed to load resource: " + name, e);
+                        return (InputStream) getPackResourceGetter().invoke(pack, name);
+                    } catch (InvocationTargetException e) {
+                        log(Level.WARNING, "Failed to load resource: " + name, e.getCause());
+                    } catch (NoSuchMethodException | IllegalAccessException e) {
+                        log(Level.SEVERE, "Could not access resource via reflection: " + name, e);
                     }
                     return null;
                 })
                 .orElse(this.getClass().getClassLoader().getResourceAsStream(name));
+    }
+
+    @NotNull
+    private static Method getPackResourceGetter() throws NoSuchMethodException {
+        if(packResourceGetter == null){
+            packResourceGetter = ObfuscationReflectionHelper.findMethod(PathPackResources.class, "getResource", String.class);
+        }
+        return packResourceGetter;
     }
 
     @Override
@@ -398,7 +405,11 @@ public class FabricHuskHomes implements HuskHomes,
     @Override
     @NotNull
     public Version getVersion() {
-        return Version.fromString(MavenVersionStringHelper.artifactVersionToString(modContainer.getModInfo().getVersion()), "-");
+        return Version.fromString(MavenVersionStringHelper.artifactVersionToString(ModList.get()
+                .getModContainerById(HuskHomesMod.MODID)
+                .map(ModContainer::getModInfo)
+                .map(IModInfo::getVersion)
+                .orElse(new DefaultArtifactVersion("missing"))), "-");
     }
 
     @Override
@@ -443,25 +454,29 @@ public class FabricHuskHomes implements HuskHomes,
 
     @Override
     public void initializePluginChannels() {
-        ServerPlayNetworking.registerGlobalReceiver(new ResourceLocation("bungeecord", "main"), this);
+        //ServerPlayNetworking.registerGlobalReceiver(new ResourceLocation("bungeecord", "main"), this);
+        // TODO: Make this work somehow on Forge?
     }
 
     // When the server receives a plugin message
-    //@Override
+    /*
+    @Override
     public void receive(@NotNull MinecraftServer server, @NotNull ServerPlayer player,
                         @NotNull ServerGamePacketListenerImpl handler, @NotNull FriendlyByteBuf buf,
                         @NotNull PacketSender responseSender) {
         if (broker instanceof PluginMessageBroker messenger && getSettings().getBrokerType() == Broker.Type.PLUGIN_MESSAGE) {
             messenger.onReceive(
                     PluginMessageBroker.BUNGEE_CHANNEL_ID,
-                    FabricUser.adapt(this, player),
+                    ForgeUser.adapt(this, player),
                     ByteBufUtil.getBytes(buf)
             );
         }
     }
+     */
 
     @Override
     public void log(@NotNull Level level, @NotNull String message, @NotNull Throwable... exceptions) {
+        /*
         LoggingEventBuilder logEvent = LOGGER.makeLoggingEventBuilder(
                 switch (level.getName()) {
                     case "WARNING" -> org.slf4j.event.Level.WARN;
@@ -473,6 +488,30 @@ public class FabricHuskHomes implements HuskHomes,
             logEvent = logEvent.setCause(exceptions[0]);
         }
         logEvent.log(message);
+         */
+        switch (level.getName()) {
+            case "WARNING" -> {
+                if(exceptions.length >= 1){
+                    LOGGER.warn(message, exceptions[0]);
+                } else{
+                    LOGGER.warn(message);
+                }
+            }
+            case "SEVERE" -> {
+                if(exceptions.length >= 1){
+                    LOGGER.error(message, exceptions[0]);
+                } else{
+                    LOGGER.error(message);
+                }
+            }
+            default -> {
+                if(exceptions.length >= 1){
+                    LOGGER.info(message, exceptions[0]);
+                } else{
+                    LOGGER.info(message);
+                }
+            }
+        }
     }
 
     @NotNull
@@ -497,7 +536,7 @@ public class FabricHuskHomes implements HuskHomes,
 
     @Override
     @NotNull
-    public FabricHuskHomes getPlugin() {
+    public ForgeHuskHomes getPlugin() {
         return this;
     }
 

@@ -19,9 +19,8 @@
 
 package net.william278.huskhomes.event;
 
-import net.fabricmc.fabric.api.event.Event;
-import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.util.InteractionResult;
+import me.Thelnfamous1.huskhomes.event.ForgeHuskHomesEvent;
+import me.Thelnfamous1.huskhomes.event.HomeEditEvent;
 import net.william278.huskhomes.position.Home;
 import net.william278.huskhomes.user.CommandUser;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +29,7 @@ import java.util.function.BiFunction;
 
 public interface HomeEditCallback extends FabricEventCallback<IHomeEditEvent> {
 
+    /*
     @NotNull
     Event<HomeEditCallback> EVENT = EventFactory.createArrayBacked(HomeEditCallback.class,
             (listeners) -> (event) -> {
@@ -45,6 +45,7 @@ public interface HomeEditCallback extends FabricEventCallback<IHomeEditEvent> {
 
                 return InteractionResult.PASS;
             });
+     */
 
     @NotNull
     BiFunction<Home, CommandUser, IHomeEditEvent> SUPPLIER = (home, editor) ->
@@ -74,8 +75,8 @@ public interface HomeEditCallback extends FabricEventCallback<IHomeEditEvent> {
                 }
 
                 @NotNull
-                public Event<HomeEditCallback> getEvent() {
-                    return EVENT;
+                public ForgeHuskHomesEvent<IHomeEditEvent> getEvent() {
+                    return new HomeEditEvent(this);
                 }
 
             };

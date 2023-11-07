@@ -19,8 +19,8 @@
 
 package net.william278.huskhomes.event;
 
-import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.util.InteractionResult;
+import me.Thelnfamous1.huskhomes.event.ForgeHuskHomesEvent;
+import me.Thelnfamous1.huskhomes.event.HomeListEvent;
 import net.william278.huskhomes.position.Home;
 import net.william278.huskhomes.user.CommandUser;
 import org.apache.commons.lang3.function.TriFunction;
@@ -30,6 +30,7 @@ import java.util.List;
 
 public interface HomeListCallback extends FabricEventCallback<IHomeListEvent> {
 
+    /*
     @NotNull
     Event<HomeListCallback> EVENT = EventFactory.createArrayBacked(HomeListCallback.class,
             (listeners) -> (event) -> {
@@ -45,6 +46,7 @@ public interface HomeListCallback extends FabricEventCallback<IHomeListEvent> {
 
                 return InteractionResult.PASS;
             });
+     */
 
     @NotNull
     TriFunction<List<Home>, CommandUser, Boolean, IHomeListEvent> SUPPLIER = (homes, viewer, publicHomes) ->
@@ -85,8 +87,8 @@ public interface HomeListCallback extends FabricEventCallback<IHomeListEvent> {
                 }
 
                 @NotNull
-                public Event<HomeListCallback> getEvent() {
-                    return EVENT;
+                public ForgeHuskHomesEvent<IHomeListEvent> getEvent() {
+                    return new HomeListEvent(this);
                 }
 
             };
