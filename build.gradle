@@ -8,6 +8,8 @@ plugins {
     id 'java' // java plugin is needed for the shadow plugin to work
 }
 
+//jarJar.enable()
+
 version = "${minecraft_version}-${mod_version}"
 group = mod_group_id
 
@@ -203,42 +205,77 @@ dependencies {
 
     // Original mod "common" dependencies, followed by the adapted dependency for this project
     // api 'commons-io:commons-io:2.12.0'
-    implementation fg.deobf("commons-io:commons-io:2.12.0")
+    minecraftLibrary ("commons-io:commons-io:2.12.0")
+    /*jarJar(group: 'commons-io', name: 'commons-io', version: '[2.12.0,)') {
+        transitive(false)
+    }*/
     // api 'org.apache.commons:commons-text:1.10.0'
-    implementation fg.deobf("org.apache.commons:commons-text:1.10.0")
+    minecraftLibrary ("org.apache.commons:commons-text:1.10.0"){
+        exclude group: 'org.apache.commons', module: 'commons-lang3'
+    }
+    /*jarJar(group: 'org.apache.commons', name: 'commons-text', version: '[1.10.0,)') {
+        transitive(false)
+    }*/
     // api 'de.themoep:minedown-adventure:1.7.2-SNAPSHOT'
-    implementation fg.deobf("de.themoep:minedown-adventure:1.7.2-SNAPSHOT")
+    minecraftLibrary ("de.themoep:minedown-adventure:1.7.2-SNAPSHOT")
+    /*jarJar(group: 'de.themoep', name: 'minedown-adventure', version: '[1.7.2-SNAPSHOT,)') {
+        transitive(false)
+    }*/
     // api 'com.google.code.gson:gson:2.10.1'
-    implementation fg.deobf("com.google.code.gson:gson:2.10.1")
+    minecraftLibrary ("com.google.code.gson:gson:2.10.1")
+    /*jarJar(group: 'com.google.code.gson', name: 'gson', version: '[2.10.1,)') {
+        transitive(false)
+    }*/
     // api 'net.william278:Annotaml:2.0.1'
-    implementation fg.deobf("net.william278:Annotaml:2.0.1")
+    minecraftLibrary ("net.william278:Annotaml:2.0.1")
+    /*jarJar(group: 'net.william278', name: 'Annotaml', version: '[2.0.1,)') {
+        transitive(false)
+    }*/
     // api 'net.william278:PagineDown:1.1'
-    implementation fg.deobf("net.william278:PagineDown:1.1")
+    minecraftLibrary ("net.william278:PagineDown:1.1")
+    /*jarJar(group: 'net.william278', name: 'PagineDown', version: '[1.1,)') {
+        transitive(false)
+    }*/
     // api 'net.william278:DesertWell:2.0.4'
-    implementation fg.deobf("net.william278:DesertWell:2.0.4")
+    minecraftLibrary ("net.william278:DesertWell:2.0.4")
+    /*jarJar(group: 'net.william278', name: 'DesertWell', version: '[2.0.4,)') {
+        transitive(false)
+    }*/
     // api 'dev.dejvokep:boosted-yaml:1.3.1'
-    implementation fg.deobf("dev.dejvokep:boosted-yaml:1.3.1")
+    minecraftLibrary("dev.dejvokep:boosted-yaml:1.3.1"){
+        exclude group: 'org.intellij.lang.annotations'
+        exclude group: 'org.jetbrains.annotations'
+    }
+    /*jarJar(group: 'dev.dejvokep', name: 'boosted-yaml', version: '[1.3.1,)') {
+        transitive(false)
+    }*/
     // api 'net.kyori:adventure-api:4.13.1'
-    implementation fg.deobf("net.kyori:adventure-api:4.13.1")
+    minecraftLibrary ("net.kyori:adventure-api:4.13.1"){
+        exclude group: 'org.jetbrains', module: 'annotations'
+    }
     /*
     api('com.zaxxer:HikariCP:5.0.1') {
         exclude module: 'slf4j-api'
     }
      */
-    implementation fg.deobf("com.zaxxer:HikariCP:5.0.1"){
+    minecraftLibrary ("com.zaxxer:HikariCP:5.0.1"){
         exclude module: 'slf4j-api'
     }
+    /*jarJar(group: 'com.zaxxer', name: 'HikariCP', version: '[5.0.1,)') {
+        exclude module: 'slf4j-api'
+        transitive(false)
+    }*/
 
     // compileOnly 'redis.clients:jedis:' + jedis_version
     // compileOnly 'org.xerial:sqlite-jdbc:' + sqlite_driver_version
     // compileOnly 'com.mysql:mysql-connector-j:' + mysql_driver_version
 
     // compileOnly 'org.jetbrains:annotations:24.0.1'
-    compileOnly fg.deobf("org.jetbrains:annotations:24.0.1")
+    //compileOnly ("org.jetbrains:annotations:24.0.1")
     // compileOnly 'com.google.guava:guava:31.1-jre'
-    compileOnly fg.deobf("com.google.guava:guava:31.1-jre")
+    compileOnly ("com.google.guava:guava:31.1-jre")
     // compileOnly 'com.github.plan-player-analytics:Plan:5.5.1923'
-    compileOnly fg.deobf("com.github.plan-player-analytics:Plan:5.5.1923")
+    compileOnly ("com.github.plan-player-analytics:Plan:5.5.1923")
     // compileOnly 'com.github.BlueMap-Minecraft:BlueMapAPI:2.5.0'
     compileOnly fg.deobf("curse.maven:bluemap-406463:4474500")
     // compileOnly 'us.dynmap:DynmapCoreAPI:3.4'
@@ -248,23 +285,45 @@ dependencies {
 
     // Original mod "fabric" dependencies, followed by the adapted dependency for this project
     //modImplementation include('net.kyori:adventure-platform-fabric:5.8.0')
-    //implementation fg.deobf("net.kyori:adventure-platform-fabric:5.8.0")
+    implementation fg.deobf("com.github.Thelnfamous1:adventure-platform-forge:1.19.2-SNAPSHOT")
     //modImplementation include('me.lucko:fabric-permissions-api:0.2-SNAPSHOT')
     implementation fg.deobf("curse.maven:luckperms-431733:3995676")
     implementation fg.deobf("com.github.Thelnfamous1:PermissionsAPI:1.19.2-SNAPSHOT")
 
     //implementation include("redis.clients:jedis:$jedis_version")
-    implementation fg.deobf("redis.clients:jedis:${jedis_version}")
+    minecraftLibrary ("redis.clients:jedis:${jedis_version}")
+    /*jarJar(group: 'redis.clients', name: 'jedis', version: "[${jedis_version},)") {
+        transitive(false)
+    }*/
     //implementation include("org.apache.commons:commons-pool2:$commons_pool_version")
-    implementation fg.deobf("org.apache.commons:commons-pool2:${commons_pool_version}")
+    minecraftLibrary ("org.apache.commons:commons-pool2:${commons_pool_version}")
+    /*jarJar(group: 'org.apache.commons', name: 'commons-pool2', version: "[${commons_pool_version},)") {
+        transitive(false)
+    }*/
     //implementation include("com.mysql:mysql-connector-j:$mysql_driver_version")
-    implementation fg.deobf("com.mysql:mysql-connector-j:${mysql_driver_version}")
+    minecraftLibrary ("com.mysql:mysql-connector-j:${mysql_driver_version}")
+    /*jarJar(group: 'com.mysql', name: 'mysql-connector-j', version: "[${mysql_driver_version},)") {
+        transitive(false)
+    }*/
     //implementation include("org.mariadb.jdbc:mariadb-java-client:$mariadb_driver_version")
-    implementation fg.deobf("org.mariadb.jdbc:mariadb-java-client:${mariadb_driver_version}")
+    minecraftLibrary ("org.mariadb.jdbc:mariadb-java-client:${mariadb_driver_version}")
+    /*jarJar(group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: "[${mariadb_driver_version},)") {
+        transitive(false)
+    }*/
+    minecraftLibrary ("com.github.waffle:waffle-jna:${waffle_jna_version}") // need this too for some reason
+    /*jarJar(group: 'com.github.waffle', name: 'waffle-jna', version: "[${waffle_jna_version},)") {
+        transitive(false)
+    }*/
     //implementation include("org.xerial:sqlite-jdbc:$sqlite_driver_version")
-    implementation fg.deobf("org.xerial:sqlite-jdbc:${sqlite_driver_version}")
+    minecraftLibrary ("org.xerial:sqlite-jdbc:${sqlite_driver_version}")
+    /*jarJar(group: 'org.xerial', name: 'sqlite-jdbc', version: "[${sqlite_driver_version},)") {
+        transitive(false)
+    }*/
     //implementation include("com.h2database:h2:$h2_driver_version")
-    implementation fg.deobf("com.h2database:h2:${h2_driver_version}")
+    minecraftLibrary ("com.h2database:h2:${h2_driver_version}")
+    /*jarJar(group: 'com.h2database', name: 'h2', version: "[${h2_driver_version},)") {
+        transitive(false)
+    }*/
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -303,13 +362,22 @@ jar {
     }
 }
 
+
+tasks.configureEach {
+    if (name == "reobfJar") {
+        mustRunAfter(tasks.shadowJar)
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
+
 configurations {
     shade
 }
+
 
 shadowJar {
     archiveClassifier = ''
@@ -321,10 +389,10 @@ shadowJar {
 
     relocate 'org.apache.commons.io', 'net.william278.huskhomes.libraries.commons.io'
     relocate 'org.apache.commons.text', 'net.william278.huskhomes.libraries.commons.text'
-    relocate 'org.apache.commons.lang3', 'net.william278.huskhomes.libraries.commons.lang3'
+    //relocate 'org.apache.commons.lang3', 'net.william278.huskhomes.libraries.commons.lang3'
     relocate 'de.themoep', 'net.william278.huskhomes.libraries'
-    relocate 'org.jetbrains', 'net.william278.huskhomes.libraries'
-    relocate 'org.intellij', 'net.william278.huskhomes.libraries'
+    //relocate 'org.jetbrains', 'net.william278.huskhomes.libraries'
+    //relocate 'org.intellij', 'net.william278.huskhomes.libraries'
     relocate 'com.zaxxer', 'net.william278.huskhomes.libraries'
     relocate 'net.william278.annotaml', 'net.william278.huskhomes.libraries.annotaml'
     relocate 'net.william278.paginedown', 'net.william278.huskhomes.libraries.paginedown'
@@ -337,7 +405,10 @@ shadowJar {
 reobf {
     shadowJar{ }
 }
+
+//jar.finalizedBy('reobfJar')
 // this replaces jar.finalizedBy('reobfJar') in the standard forge mod buildscript
+
 tasks.build.dependsOn reobfShadowJar
 jar.finalizedBy('reobfShadowJar')
 
