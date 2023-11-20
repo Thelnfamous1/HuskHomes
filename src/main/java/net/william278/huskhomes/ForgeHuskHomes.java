@@ -29,7 +29,6 @@ import net.minecraftforge.common.util.MavenVersionStringHelper;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.forgespi.language.IModInfo;
 import net.minecraftforge.resource.PathPackResources;
 import net.minecraftforge.resource.ResourcePackLoader;
@@ -379,7 +378,8 @@ public class ForgeHuskHomes implements HuskHomes,
     @NotNull
     private static Method getPackResourceGetter() throws NoSuchMethodException {
         if(packResourceGetter == null){
-            packResourceGetter = ObfuscationReflectionHelper.findMethod(PathPackResources.class, "getResource", String.class);
+            packResourceGetter = PathPackResources.class.getDeclaredMethod("getResource", String.class);
+            packResourceGetter.setAccessible(true);
         }
         return packResourceGetter;
     }
