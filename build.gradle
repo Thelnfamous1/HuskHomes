@@ -300,6 +300,13 @@ dependencies {
     //implementation include("com.h2database:h2:$h2_driver_version")
     minecraftLibrary ("com.h2database:h2:${h2_driver_version}")
     jarJar(group: 'com.h2database', name: 'h2', version: "[${h2_driver_version},)")
+
+    // test stuff
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testImplementation 'com.github.plan-player-analytics:Plan:5.5.2391'
+    testImplementation 'com.github.yuriy-g:simple-java-plot:5c502c2e98'
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
