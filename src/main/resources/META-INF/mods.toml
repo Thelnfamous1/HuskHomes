@@ -67,8 +67,8 @@ description='''${mod_description}'''
     mandatory=true
     # This version range declares a minimum of the current minecraft version up to but not including the next major version
     versionRange="[5.5.2,)"
-    ordering="BEFORE"
-    side="BOTH"
+    ordering="NONE"
+    side="SERVER"
 # Here's another dependency
 [[dependencies.${mod_id}]]
     modId="permissions_api"
@@ -85,7 +85,7 @@ mandatory=false
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
 versionRange="[3.13,)"
 ordering="NONE"
-side="BOTH"
+side="SERVER"
 # Here's another dependency
 [[dependencies.${mod_id}]]
 modId="pl3xmap"
@@ -93,7 +93,7 @@ mandatory=false
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
 versionRange="[0,)"
 ordering="NONE"
-side="BOTH"
+side="SERVER"
 # Here's another dependency
 [[dependencies.${mod_id}]]
 modId="plan"
@@ -101,4 +101,4 @@ mandatory=false
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
 versionRange="[5.5,)"
 ordering="NONE"
-side="BOTH"
+side="SERVER"
