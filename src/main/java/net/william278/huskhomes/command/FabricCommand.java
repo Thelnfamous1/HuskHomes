@@ -28,13 +28,18 @@ import net.luckperms.api.util.Tristate;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
-import net.william278.huskhomes.ForgeHuskHomes;
+import net.william278.huskhomes.FabricHuskHomes;
+import net.william278.huskhomes.HuskHomes;
 import net.william278.huskhomes.teleport.TeleportRequest;
 import net.william278.huskhomes.user.CommandUser;
-import net.william278.huskhomes.user.ForgeUser;
+import net.william278.huskhomes.user.FabricUser;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
@@ -43,10 +48,10 @@ import static net.minecraft.commands.Commands.literal;
 
 public class FabricCommand {
 
-    private final ForgeHuskHomes plugin;
+    private final FabricHuskHomes plugin;
     private final Command command;
 
-    public FabricCommand(@NotNull Command command, @NotNull ForgeHuskHomes plugin) {
+    public FabricCommand(@NotNull Command command, @NotNull FabricHuskHomes plugin) {
         this.command = command;
         this.plugin = plugin;
     }
@@ -65,13 +70,24 @@ public class FabricCommand {
         }
 
         // Register additional permissions
+        final Map<String, Boolean> permissions = command.getAdditionalPermissions();
+        permissions.forEach((permission, isOp) -> plugin.getPermissions().put(permission, isOp));
+
         MinecraftForge.EVENT_BUS.addListener((PermissionCheckEvent event) -> {
-            final Map<String, Boolean> permissions = this.command.getAdditionalPermissions();
-            permissions.forEach((permission, isOp) -> this.plugin.getPermissions().put(permission, isOp));
             if (permissions.containsKey(event.getPermission()) && permissions.get(event.getPermission()) && event.getSource().hasPermission(3)) {
                 event.setState(Tristate.TRUE);
             }
+            event.setState(Tristate.UNDEFINED);
         });
+
+        /*
+        PermissionCheckEvent.EVENT.register((player, node) -> {
+            if (permissions.containsKey(node) && permissions.get(node) && player.hasPermissionLevel(3)) {
+                return TriState.TRUE;
+            }
+            return TriState.DEFAULT;
+        });
+         */
 
         // Register aliases
         final LiteralCommandNode<CommandSourceStack> node = dispatcher.register(builder);
@@ -96,7 +112,7 @@ public class FabricCommand {
             return (context, builder) -> com.mojang.brigadier.suggestion.Suggestions.empty();
         }
         return (context, builder) -> {
-            final String[] args = command.removeFirstArg(context.getInput().split(" "));
+            final String[] args = command.removeFirstArg(context.getInput().split(" ", -1));
             provider.getSuggestions(resolveExecutor(context.getSource()), args).stream()
                     .map(suggestion -> {
                         final String completedArgs = String.join(" ", args);
@@ -113,54 +129,64 @@ public class FabricCommand {
 
     private CommandUser resolveExecutor(@NotNull CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
-            return ForgeUser.adapt(plugin, player);
+            return FabricUser.adapt(player, plugin);
         }
         return plugin.getConsole();
     }
 
 
     /**
-     * Commands available on the Fabric HuskHomes implementation
+     * Commands available on the Fabric HuskHomes implementation.
      */
     public enum Type {
-        HOME_COMMAND(new PrivateHomeCommand(ForgeHuskHomes.getInstance())),
-        SET_HOME_COMMAND(new SetHomeCommand(ForgeHuskHomes.getInstance())),
-        HOME_LIST_COMMAND(new PrivateHomeListCommand(ForgeHuskHomes.getInstance())),
-        DEL_HOME_COMMAND(new DelHomeCommand(ForgeHuskHomes.getInstance())),
-        EDIT_HOME_COMMAND(new EditHomeCommand(ForgeHuskHomes.getInstance())),
-        PUBLIC_HOME_COMMAND(new PublicHomeCommand(ForgeHuskHomes.getInstance())),
-        PUBLIC_HOME_LIST_COMMAND(new PublicHomeListCommand(ForgeHuskHomes.getInstance())),
-        WARP_COMMAND(new WarpCommand(ForgeHuskHomes.getInstance())),
-        SET_WARP_COMMAND(new SetWarpCommand(ForgeHuskHomes.getInstance())),
-        WARP_LIST_COMMAND(new WarpListCommand(ForgeHuskHomes.getInstance())),
-        DEL_WARP_COMMAND(new DelWarpCommand(ForgeHuskHomes.getInstance())),
-        EDIT_WARP_COMMAND(new EditWarpCommand(ForgeHuskHomes.getInstance())),
-        TP_COMMAND(new TpCommand(ForgeHuskHomes.getInstance())),
-        TP_HERE_COMMAND(new TpHereCommand(ForgeHuskHomes.getInstance())),
-        TPA_COMMAND(new TeleportRequestCommand(ForgeHuskHomes.getInstance(), TeleportRequest.Type.TPA)),
-        TPA_HERE_COMMAND(new TeleportRequestCommand(ForgeHuskHomes.getInstance(), TeleportRequest.Type.TPA_HERE)),
-        TPACCEPT_COMMAND(new TpRespondCommand(ForgeHuskHomes.getInstance(), true)),
-        TPDECLINE_COMMAND(new TpRespondCommand(ForgeHuskHomes.getInstance(), false)),
-        RTP_COMMAND(new RtpCommand(ForgeHuskHomes.getInstance())),
-        TP_IGNORE_COMMAND(new TpIgnoreCommand(ForgeHuskHomes.getInstance())),
-        TP_OFFLINE_COMMAND(new TpOfflineCommand(ForgeHuskHomes.getInstance())),
-        TP_ALL_COMMAND(new TpAllCommand(ForgeHuskHomes.getInstance())),
-        TPA_ALL_COMMAND(new TpaAllCommand(ForgeHuskHomes.getInstance())),
-        SPAWN_COMMAND(new SpawnCommand(ForgeHuskHomes.getInstance())),
-        SET_SPAWN_COMMAND(new SetSpawnCommand(ForgeHuskHomes.getInstance())),
-        BACK_COMMAND(new BackCommand(ForgeHuskHomes.getInstance())),
-        HUSKHOMES_COMMAND(new HuskHomesCommand(ForgeHuskHomes.getInstance()));
+        HOME_COMMAND(PrivateHomeCommand::new),
+        SET_HOME_COMMAND(SetHomeCommand::new),
+        HOME_LIST_COMMAND(PrivateHomeListCommand::new),
+        DEL_HOME_COMMAND(DelHomeCommand::new),
+        EDIT_HOME_COMMAND(EditHomeCommand::new),
+        PUBLIC_HOME_COMMAND(PublicHomeCommand::new),
+        PUBLIC_HOME_LIST_COMMAND(PublicHomeListCommand::new),
+        WARP_COMMAND(WarpCommand::new),
+        SET_WARP_COMMAND(SetWarpCommand::new),
+        WARP_LIST_COMMAND(WarpListCommand::new),
+        DEL_WARP_COMMAND(DelWarpCommand::new),
+        EDIT_WARP_COMMAND(EditWarpCommand::new),
+        TP_COMMAND(TpCommand::new),
+        TP_HERE_COMMAND(TpHereCommand::new),
+        TPA_COMMAND((plugin) -> new TeleportRequestCommand(plugin, TeleportRequest.Type.TPA)),
+        TPA_HERE_COMMAND((plugin) -> new TeleportRequestCommand(plugin, TeleportRequest.Type.TPA_HERE)),
+        TPACCEPT_COMMAND((plugin) -> new TpRespondCommand(plugin, true)),
+        TPDECLINE_COMMAND((plugin) -> new TpRespondCommand(plugin, false)),
+        RTP_COMMAND(RtpCommand::new),
+        TP_IGNORE_COMMAND(TpIgnoreCommand::new),
+        TP_OFFLINE_COMMAND(TpOfflineCommand::new),
+        TP_ALL_COMMAND(TpAllCommand::new),
+        TPA_ALL_COMMAND(TpaAllCommand::new),
+        SPAWN_COMMAND(SpawnCommand::new),
+        SET_SPAWN_COMMAND(SetSpawnCommand::new),
+        BACK_COMMAND(BackCommand::new),
+        HUSKHOMES_COMMAND(HuskHomesCommand::new);
 
-        private final Command command;
+        private final Function<HuskHomes, Command> supplier;
 
-        Type(@NotNull Command command) {
-            this.command = command;
+        Type(@NotNull Function<HuskHomes, Command> supplier) {
+            this.supplier = supplier;
         }
 
         @NotNull
-        public Command getCommand() {
-            return command;
+        public Command createCommand(@NotNull HuskHomes plugin) {
+            return supplier.apply(plugin);
         }
+
+        @NotNull
+        public static List<Command> getCommands(@NotNull FabricHuskHomes plugin) {
+            return Arrays.stream(values())
+                    .map(type -> type.createCommand(plugin))
+                    .map(command -> plugin.getSettings().isCommandDisabled(command) ? null : command)
+                    .filter(Objects::nonNull)
+                    .toList();
+        }
+
     }
 
 }

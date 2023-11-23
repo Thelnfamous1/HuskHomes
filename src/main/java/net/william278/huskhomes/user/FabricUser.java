@@ -28,7 +28,7 @@ import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.william278.huskhomes.ForgeHuskHomes;
+import net.william278.huskhomes.FabricHuskHomes;
 import net.william278.huskhomes.position.Location;
 import net.william278.huskhomes.position.Position;
 import net.william278.huskhomes.position.World;
@@ -37,19 +37,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class ForgeUser extends OnlineUser {
-    private final ForgeHuskHomes plugin;
+public class FabricUser extends OnlineUser {
+
+    private final FabricHuskHomes plugin;
     private final ServerPlayer player;
 
-    private ForgeUser(@NotNull ForgeHuskHomes plugin, @NotNull ServerPlayer player) {
+    private FabricUser(@NotNull ServerPlayer player, @NotNull FabricHuskHomes plugin) {
         super(player.getUUID(), player.getScoreboardName());
-        this.plugin = plugin;
         this.player = player;
+        this.plugin = plugin;
     }
 
     @NotNull
-    public static ForgeUser adapt(@NotNull ForgeHuskHomes plugin, @NotNull ServerPlayer player) {
-        return new ForgeUser(plugin, player);
+    public static FabricUser adapt(@NotNull ServerPlayer player, @NotNull FabricHuskHomes plugin) {
+        return new FabricUser(player, plugin);
     }
 
     @Override
@@ -117,22 +118,46 @@ public class ForgeUser extends OnlineUser {
     @Override
     @NotNull
     public Audience getAudience() {
-        return (Audience) player; // Adventure's Fabric platform mixins Audience into ServerPlayer
+        return (Audience) player;
     }
 
     @Override
-    public void teleportLocally(@NotNull Location location, boolean asynchronous) throws TeleportationException {
-        final MinecraftServer server = player.getLevel().getServer();
-        final ResourceLocation worldId = ResourceLocation.tryParse(location.getWorld().getName());
+    public void teleportLocally(@NotNull Location location, boolean async) throws TeleportationException {
+        final MinecraftServer server = player.getServer();
+        if (server == null) {
+            throw new TeleportationException(TeleportationException.Type.ILLEGAL_TARGET_COORDINATES, plugin);
+        }
+
+
         //noinspection ConstantConditions
         player.teleportTo(
                 server.getLevel(server.levelKeys().stream()
-                        .filter(key -> key.location().equals(worldId)).findFirst()
-                        .orElseThrow(() -> new TeleportationException(TeleportationException.Type.WORLD_NOT_FOUND))
-                ),
+                        .filter(key -> key.location().equals(ResourceLocation.tryParse(location.getWorld().getName())))
+                        .findFirst().orElseThrow(
+                                () -> new TeleportationException(TeleportationException.Type.WORLD_NOT_FOUND, plugin)
+                        )),
                 location.getX(), location.getY(), location.getZ(),
-                location.getYaw(), location.getPitch()
+                location.getYaw(),
+                location.getPitch()
         );
+
+        /*
+        player.stopRiding();
+        FabricDimensions.teleport(
+                player,
+                server.getLevel(server.levelKeys().stream()
+                        .filter(key -> key.location().equals(ResourceLocation.tryParse(location.getWorld().getName())))
+                        .findFirst().orElseThrow(
+                                () -> new TeleportationException(TeleportationException.Type.WORLD_NOT_FOUND, plugin)
+                        )),
+                new TeleportTarget(
+                        new Vec3(location.getX(), location.getY(), location.getZ()),
+                        Vec3.ZERO,
+                        location.getYaw(),
+                        location.getPitch()
+                )
+        );
+         */
     }
 
     @Override

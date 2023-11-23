@@ -186,6 +186,7 @@ repositories {
 
 
     maven { url 'https://repo.minebench.de/' }
+    maven { url "https://repo.william278.net/releases" }
 
     exclusiveContent {
         forRepository {
@@ -210,7 +211,7 @@ dependencies {
 
     // Original mod "common" dependencies, followed by the adapted dependency for this project
     // api 'commons-io:commons-io:2.12.0'
-    minecraftLibrary ("commons-io:commons-io:2.12.0")
+    minecraftLibrary ("commons-io:commons-io:2.14.0")
     /*
     jarJar(group: 'commons-io', name: 'commons-io', version: '[2.12.0,)'){ // FORGE ALREADY ADDS THIS
         jarJar.pin(it, '2.12.0')
@@ -237,9 +238,9 @@ dependencies {
     }
      */
     // api 'net.william278:Annotaml:2.0.1'
-    minecraftLibrary ("net.william278:Annotaml:2.0.1")
-    jarJar(group: 'net.william278', name: 'Annotaml', version: '[2.0.1,)'){
-        jarJar.pin(it, '2.0.1')
+    minecraftLibrary ("net.william278:annotaml:2.0.5")
+    jarJar(group: 'net.william278', name: 'annotaml', version: '[2.0.5,)'){
+        jarJar.pin(it, '2.0.5')
     }
     // api 'net.william278:PagineDown:1.1'
     minecraftLibrary ("net.william278:PagineDown:1.1")
@@ -263,7 +264,7 @@ dependencies {
 
     // api 'net.kyori:adventure-api:4.13.1'
 
-    minecraftLibrary ("net.kyori:adventure-api:4.13.1"){
+    minecraftLibrary ("net.kyori:adventure-api:4.14.0"){
         exclude group: 'org.jetbrains', module: 'annotations'
     }
     /*
@@ -286,7 +287,7 @@ dependencies {
     // compileOnly 'org.jetbrains:annotations:24.0.1'
     //compileOnly ("org.jetbrains:annotations:24.0.1")
     // compileOnly 'com.google.guava:guava:31.1-jre'
-    compileOnly ("com.google.guava:guava:31.1-jre")
+    compileOnly ("com.google.guava:guava:32.1.3-jre")
     // compileOnly 'com.github.plan-player-analytics:Plan:5.5.1923'
     compileOnly ("com.github.plan-player-analytics:Plan:5.5.1923")
     // compileOnly 'com.github.BlueMap-Minecraft:BlueMapAPI:2.5.0'

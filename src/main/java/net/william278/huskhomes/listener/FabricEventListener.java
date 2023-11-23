@@ -24,41 +24,41 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
-import net.william278.huskhomes.ForgeHuskHomes;
-import net.william278.huskhomes.user.ForgeUser;
+import net.william278.huskhomes.FabricHuskHomes;
+import net.william278.huskhomes.user.FabricUser;
 import org.jetbrains.annotations.NotNull;
 
 // Note that the teleport event and update player respawn position events are not handled on Fabric.
 // The "update last position on teleport event" and "global respawn" features are not supported on Fabric.
-public class ForgeEventListener extends EventListener {
+public class FabricEventListener extends EventListener {
 
-    public ForgeEventListener(@NotNull ForgeHuskHomes plugin) {
+    public FabricEventListener(@NotNull FabricHuskHomes plugin) {
         super(plugin);
         this.registerEvents(plugin);
     }
 
     // Register fabric event callback listeners to internal handlers
-    private void registerEvents(@NotNull ForgeHuskHomes plugin) {
+    private void registerEvents(@NotNull FabricHuskHomes plugin) {
         // Join event
         /*
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> handlePlayerJoin(
-                FabricUser.adapt(plugin, handler.player)
+                FabricUser.adapt(handler.player, plugin)
         ));
          */
         MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> {
             if(event.getEntity() instanceof ServerPlayer player)
-                handlePlayerLeave(ForgeUser.adapt(plugin, player));
+                handlePlayerJoin(FabricUser.adapt(player, plugin));
         });
 
         // Quit event
         /*
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> handlePlayerLeave(
-                FabricUser.adapt(plugin, handler.player)
+                FabricUser.adapt(handler.player, plugin)
         ));
          */
         MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent event) -> {
             if(event.getEntity() instanceof ServerPlayer player){
-                ForgeUser.adapt(plugin, player);
+                handlePlayerLeave(FabricUser.adapt(player, plugin));
             }
         });
 
@@ -66,24 +66,24 @@ public class ForgeEventListener extends EventListener {
         /*
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayerEntity player) {
-                handlePlayerDeath(FabricUser.adapt(plugin, player));
+                handlePlayerDeath(FabricUser.adapt(player, plugin));
             }
         });
          */
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, (LivingDeathEvent event) -> {
             if(!event.isCanceled() && event.getEntity() instanceof ServerPlayer player)
-                handlePlayerDeath(ForgeUser.adapt(plugin, player));
+                handlePlayerDeath(FabricUser.adapt(player, plugin));
         });
 
         // Respawn event
         /*
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> handlePlayerRespawn(
-                FabricUser.adapt(plugin, newPlayer)
+                FabricUser.adapt(newPlayer, plugin)
         ));
          */
         MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerRespawnEvent event) -> {
             if(event.getEntity() instanceof ServerPlayer player){
-                handlePlayerRespawn(ForgeUser.adapt(plugin, player));
+                handlePlayerRespawn(FabricUser.adapt(player, plugin));
             }
         });
     }

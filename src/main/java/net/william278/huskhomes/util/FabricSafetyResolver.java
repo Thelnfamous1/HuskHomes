@@ -28,18 +28,18 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
-import net.william278.huskhomes.ForgeHuskHomes;
+import net.william278.huskhomes.FabricHuskHomes;
 import net.william278.huskhomes.position.Location;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface ForgeSafetyResolver extends SafetyResolver {
+public interface FabricSafetyResolver extends SafetyResolver {
 
     @Override
     default CompletableFuture<Optional<Location>> findSafeGroundLocation(@NotNull Location location) {
-        final MinecraftServer server = ((ForgeHuskHomes) getPlugin()).getMinecraftServer();
+        final MinecraftServer server = ((FabricHuskHomes) getPlugin()).getMinecraftServer();
         final ResourceLocation worldId = ResourceLocation.tryParse(location.getWorld().getName());
 
         // Ensure the location is on a valid world
@@ -60,7 +60,7 @@ public interface ForgeSafetyResolver extends SafetyResolver {
     }
 
     /**
-     * Search for a safe ground location near the given location
+     * Search for a safe ground location near the given location.
      *
      * @param location The location to search around
      * @return An optional safe location, within 4 blocks of the given location
@@ -75,7 +75,8 @@ public interface ForgeSafetyResolver extends SafetyResolver {
 
                 final Material material = blockState.getMaterial();
                 final ResourceLocation blockId = Registry.BLOCK.getKey(blockState.getBlock());
-                if (!material.isLiquid() && material != Material.FIRE && isBlockSafe(blockId.toString())) {
+                if (!material.isLiquid() && material != Material.FIRE
+                        && getPlugin().isBlockSafeForStanding(blockId.toString())) {
                     return Optional.of(Location.at(
                             blockPos.getX() + 0.5,
                             highestY + 1,
@@ -89,7 +90,7 @@ public interface ForgeSafetyResolver extends SafetyResolver {
     }
 
     /**
-     * Get the highest Y value at the given X and Z coordinates
+     * Get the highest Y value at the given X and Z coordinates.
      *
      * @param blockView The block view to search
      * @param x         The X coordinate

@@ -2,9 +2,8 @@ package me.Thelnfamous1.huskhomes.event;
 
 import net.minecraft.world.InteractionResult;
 import net.minecraftforge.eventbus.api.Event;
-import net.william278.huskhomes.event.HuskHomesEvent;
 
-public abstract class ForgeHuskHomesEvent<E extends HuskHomesEvent> extends Event {
+public abstract class ForgeHuskHomesEvent<E extends net.william278.huskhomes.event.Event> extends Event {
 
     protected final E wrappedEvent;
     private InteractionResult invokeResult = InteractionResult.PASS;

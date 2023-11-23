@@ -19,13 +19,15 @@
 
 package net.william278.huskhomes;
 
-import com.mojang.brigadier.CommandDispatcher;
 import me.Thelnfamous1.huskhomes.HuskHomesMod;
 import net.kyori.adventure.platform.fabric.FabricServerAudiences;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.MavenVersionStringHelper;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -41,12 +43,13 @@ import net.william278.huskhomes.config.Server;
 import net.william278.huskhomes.config.Settings;
 import net.william278.huskhomes.config.Spawn;
 import net.william278.huskhomes.database.Database;
+import net.william278.huskhomes.database.H2Database;
 import net.william278.huskhomes.database.MySqlDatabase;
 import net.william278.huskhomes.database.SqLiteDatabase;
-import net.william278.huskhomes.event.ForgeEventDispatcher;
+import net.william278.huskhomes.event.FabricEventDispatcher;
 import net.william278.huskhomes.hook.Hook;
 import net.william278.huskhomes.listener.EventListener;
-import net.william278.huskhomes.listener.ForgeEventListener;
+import net.william278.huskhomes.listener.FabricEventListener;
 import net.william278.huskhomes.manager.Manager;
 import net.william278.huskhomes.network.Broker;
 import net.william278.huskhomes.network.PluginMessageBroker;
@@ -56,11 +59,11 @@ import net.william278.huskhomes.position.World;
 import net.william278.huskhomes.random.NormalDistributionEngine;
 import net.william278.huskhomes.random.RandomTeleportEngine;
 import net.william278.huskhomes.user.ConsoleUser;
-import net.william278.huskhomes.user.ForgeUser;
+import net.william278.huskhomes.user.FabricUser;
 import net.william278.huskhomes.user.OnlineUser;
 import net.william278.huskhomes.user.SavedUser;
-import net.william278.huskhomes.util.ForgeSafetyResolver;
-import net.william278.huskhomes.util.ForgeTaskRunner;
+import net.william278.huskhomes.util.FabricSafetyResolver;
+import net.william278.huskhomes.util.FabricTask;
 import net.william278.huskhomes.util.UnsafeBlocks;
 import net.william278.huskhomes.util.Validator;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
@@ -75,26 +78,17 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public class ForgeHuskHomes implements HuskHomes,
-        ForgeTaskRunner, ForgeEventDispatcher, ForgeSafetyResolver {
+public class FabricHuskHomes implements HuskHomes, FabricTask.Supplier,
+        FabricEventDispatcher, FabricSafetyResolver {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("HuskHomes");
-    private static ForgeHuskHomes instance;
     private static Method packResourceGetter;
 
-    @NotNull
-    public static ForgeHuskHomes getInstance() {
-        return instance;
-    }
-
-    //private final ModContainer modContainer = FabricLoader.getInstance().getModContainer(HuskHomesMod.MODID).orElseThrow(() -> new RuntimeException("Failed to get Mod Container"));
     private MinecraftServer minecraftServer;
-    private ConcurrentHashMap<Integer, CompletableFuture<?>> tasks;
     private Map<String, Boolean> permissions;
     private Set<SavedUser> savedUsers;
     private Settings settings;
@@ -108,7 +102,7 @@ public class ForgeHuskHomes implements HuskHomes,
     private UnsafeBlocks unsafeBlocks;
     private List<Hook> hooks;
     private List<Command> commands;
-    private Map<String, List<String>> globalPlayerList;
+    private ConcurrentHashMap<String, List<String>> globalPlayerList;
     private Set<UUID> currentlyOnWarmup;
     private Server server;
     @Nullable
@@ -117,14 +111,10 @@ public class ForgeHuskHomes implements HuskHomes,
 
     //@Override
     public void onInitializeServer() {
-        // Set instance
-        instance = this;
-
         // Get plugin version from mod container
-        this.tasks = new ConcurrentHashMap<>();
         this.permissions = new HashMap<>();
         this.savedUsers = new HashSet<>();
-        this.globalPlayerList = new HashMap<>();
+        this.globalPlayerList = new ConcurrentHashMap<>();
         this.currentlyOnWarmup = new HashSet<>();
         this.validator = new Validator(this);
 
@@ -135,6 +125,9 @@ public class ForgeHuskHomes implements HuskHomes,
             }
         });
 
+        // Pre-register commands
+        initialize("commands", (plugin) -> this.commands = registerCommands());
+
         /*
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             this.minecraftServer = server;
@@ -142,22 +135,26 @@ public class ForgeHuskHomes implements HuskHomes,
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> this.onDisable());
          */
+        MinecraftForge.EVENT_BUS.addListener((ServerStartingEvent event) -> {
+            this.minecraftServer = event.getServer();
+            this.onEnable();
+        });
+
+        MinecraftForge.EVENT_BUS.addListener((ServerStoppingEvent event) -> {
+            this.onDisable();
+        });
     }
 
-    public void onCommandRegistration(CommandDispatcher<CommandSourceStack> dispatcher){
-        // Pre-register commands
-        initialize("commands", (plugin) -> this.commands = registerCommands(dispatcher));
-    }
-
-    public void onEnable() {
+    private void onEnable() {
         // Create adventure audience
         this.audiences = FabricServerAudiences.of(minecraftServer);
 
         // Initialize the database
         initialize(getSettings().getDatabaseType().getDisplayName() + " database connection", (plugin) -> {
             this.database = switch (getSettings().getDatabaseType()) {
-                case MYSQL -> new MySqlDatabase(this);
+                case MYSQL, MARIADB -> new MySqlDatabase(this);
                 case SQLITE -> new SqLiteDatabase(this);
+                case H2 -> new H2Database(this);
             };
 
             database.initialize();
@@ -184,7 +181,13 @@ public class ForgeHuskHomes implements HuskHomes,
             this.registerHooks();
 
             if (hooks.size() > 0) {
-                hooks.forEach(Hook::initialize);
+                hooks.forEach(hook -> {
+                    try {
+                        hook.initialize();
+                    } catch (Throwable e) {
+                        log(Level.WARNING, "Failed to initialize " + hook.getName() + " hook", e);
+                    }
+                });
                 log(Level.INFO, "Registered " + hooks.size() + " mod hooks: " + hooks.stream()
                         .map(Hook::getName)
                         .collect(Collectors.joining(", ")));
@@ -192,12 +195,12 @@ public class ForgeHuskHomes implements HuskHomes,
         });
 
         // Register events
-        initialize("events", (plugin) -> this.eventListener = new ForgeEventListener(this));
+        initialize("events", (plugin) -> this.eventListener = new FabricEventListener(this));
 
         this.checkForUpdates();
     }
 
-    public void onDisable() {
+    private void onDisable() {
         if (this.eventListener != null) {
             this.eventListener.handlePluginDisable();
         }
@@ -211,7 +214,7 @@ public class ForgeHuskHomes implements HuskHomes,
             audiences.close();
             audiences = null;
         }
-        cancelAllTasks();
+        cancelTasks();
     }
 
     @Override
@@ -224,7 +227,7 @@ public class ForgeHuskHomes implements HuskHomes,
     @NotNull
     public List<OnlineUser> getOnlineUsers() {
         return minecraftServer.getPlayerList().getPlayers()
-                .stream().map(user -> (OnlineUser) ForgeUser.adapt(this, user))
+                .stream().map(user -> (OnlineUser) FabricUser.adapt(user, this))
                 .toList();
     }
 
@@ -264,6 +267,27 @@ public class ForgeHuskHomes implements HuskHomes,
     @Override
     public void setServerSpawn(@NotNull Spawn spawn) {
         this.serverSpawn = spawn;
+    }
+
+    @Override
+    public void setServerSpawn(@NotNull Location location) {
+        try {
+            // Create or update the spawn.yml file
+            final File spawnFile = new File(getDataFolder(), "spawn.yml");
+            if (spawnFile.exists() && !spawnFile.delete()) {
+                log(Level.WARNING, "Failed to delete the existing spawn.yml file");
+            }
+            this.serverSpawn = Annotaml.create(spawnFile, new Spawn(location)).get();
+
+            // Update the world spawn location, too
+            minecraftServer.getAllLevels().forEach(world -> {
+                if (world.dimension().location().toString().equals(location.getWorld().getName())) {
+                    world.setDefaultSpawnPos(new BlockPos(location.getX(), location.getY(), location.getZ()), 0);
+                }
+            });
+        } catch (IOException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            log(Level.WARNING, "Failed to save the server spawn.yml file", e);
+        }
     }
 
     @Override
@@ -327,27 +351,6 @@ public class ForgeHuskHomes implements HuskHomes,
     }
 
     @Override
-    public void setServerSpawn(@NotNull Location location) {
-        try {
-            // Create or update the spawn.yml file
-            final File spawnFile = new File(getDataFolder(), "spawn.yml");
-            if (spawnFile.exists() && !spawnFile.delete()) {
-                log(Level.WARNING, "Failed to delete the existing spawn.yml file");
-            }
-            this.serverSpawn = Annotaml.create(spawnFile, new Spawn(location)).get();
-
-            // Update the world spawn location, too
-            minecraftServer.getAllLevels().forEach(world -> {
-                if (world.dimension().location().toString().equals(location.getWorld().getName())) {
-                    world.setDefaultSpawnPos(new BlockPos(location.getX(), location.getY(), location.getZ()), 0);
-                }
-            });
-        } catch (IOException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            log(Level.WARNING, "Failed to save the server spawn.yml file", e);
-        }
-    }
-
-    @Override
     @NotNull
     public List<Hook> getHooks() {
         return hooks;
@@ -388,7 +391,6 @@ public class ForgeHuskHomes implements HuskHomes,
     @NotNull
     public File getDataFolder() {
         return FMLPaths.CONFIGDIR.get().resolve(HuskHomesMod.MODID).toFile();
-        //return FabricLoader.getInstance().getConfigDir().resolve("huskhomes").toFile();
     }
 
     @Override
@@ -419,20 +421,24 @@ public class ForgeHuskHomes implements HuskHomes,
     }
 
     @NotNull
-    private List<Command> registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
-        final List<Command> commands = Arrays.stream(FabricCommand.Type.values())
-                .map(FabricCommand.Type::getCommand)
-                .filter(command -> !settings.isCommandDisabled(command))
-                .toList();
+    public List<Command> registerCommands() {
+        final List<Command> commands = FabricCommand.Type.getCommands(getPlugin());
 
-        commands.forEach(command -> new FabricCommand(command, this).register(dispatcher));
+        MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
+            commands.forEach(command -> new FabricCommand(command, this).register(event.getDispatcher()));
+        });
 
+        /*
+        CommandRegistrationCallback.EVENT.register((dispatcher, ignored, ignored2) ->
+                commands.forEach(command -> new FabricCommand(command, this).register(dispatcher)));
+         */
         return commands;
     }
 
     @Override
     public boolean isDependencyLoaded(@NotNull String name) {
-        return ModList.get().isLoaded(name);
+        return ModList.get().isLoaded(name)
+                || ModList.get().isLoaded(name.toLowerCase(Locale.ENGLISH));
     }
 
     @Override
@@ -454,20 +460,20 @@ public class ForgeHuskHomes implements HuskHomes,
 
     @Override
     public void initializePluginChannels() {
-        //ServerPlayNetworking.registerGlobalReceiver(new ResourceLocation("bungeecord", "main"), this);
-        // TODO: Make this work somehow on Forge?
+        //ServerPlayNetworking.registerGlobalReceiver(new Identifier("bungeecord", "main"), this);
     }
 
-    // When the server receives a plugin message
     /*
-    @Override
-    public void receive(@NotNull MinecraftServer server, @NotNull ServerPlayer player,
-                        @NotNull ServerGamePacketListenerImpl handler, @NotNull FriendlyByteBuf buf,
+    // When the server receives a plugin message
+    //@Override
+    public void receive(@NotNull MinecraftServer server, @NotNull ServerPlayerEntity player,
+                        @NotNull ServerPlayNetworkHandler handler, @NotNull PacketByteBuf buf,
                         @NotNull PacketSender responseSender) {
-        if (broker instanceof PluginMessageBroker messenger && getSettings().getBrokerType() == Broker.Type.PLUGIN_MESSAGE) {
+        if (broker instanceof PluginMessageBroker messenger
+                && getSettings().getBrokerType() == Broker.Type.PLUGIN_MESSAGE) {
             messenger.onReceive(
                     PluginMessageBroker.BUNGEE_CHANNEL_ID,
-                    ForgeUser.adapt(this, player),
+                    FabricUser.adapt(player, this),
                     ByteBufUtil.getBytes(buf)
             );
         }
@@ -519,10 +525,6 @@ public class ForgeHuskHomes implements HuskHomes,
         return permissions;
     }
 
-    public void setMinecraftServer(MinecraftServer minecraftServer) {
-        this.minecraftServer = minecraftServer;
-    }
-
     @NotNull
     public MinecraftServer getMinecraftServer() {
         return minecraftServer;
@@ -530,13 +532,7 @@ public class ForgeHuskHomes implements HuskHomes,
 
     @Override
     @NotNull
-    public ConcurrentHashMap<Integer, CompletableFuture<?>> getTasks() {
-        return tasks;
-    }
-
-    @Override
-    @NotNull
-    public ForgeHuskHomes getPlugin() {
+    public FabricHuskHomes getPlugin() {
         return this;
     }
 

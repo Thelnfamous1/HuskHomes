@@ -22,7 +22,7 @@ package net.william278.huskhomes.event;
 import net.minecraft.world.InteractionResult;
 import org.jetbrains.annotations.NotNull;
 
-public interface FabricEventCallback<E extends HuskHomesEvent> {
+public interface FabricEventCallback<E extends Event> {
 
     @NotNull
     InteractionResult invoke(@NotNull E event);
