@@ -303,6 +303,7 @@ dependencies {
     implementation fg.deobf("flatdir:adventure_platform_forge:1.19.2-5.5.2-all")
     //modImplementation include('me.lucko:fabric-permissions-api:0.2-SNAPSHOT')
     implementation fg.deobf("curse.maven:luckperms-431733:3995676")
+    //minecraftLibrary fg.deobf('net.luckperms:api:5.4')
     implementation fg.deobf("com.github.Thelnfamous1:PermissionsAPI:1.19.2-SNAPSHOT")
 
     //implementation include("redis.clients:jedis:$jedis_version")

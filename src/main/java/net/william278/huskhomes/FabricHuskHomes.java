@@ -32,8 +32,6 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.language.IModInfo;
-import net.minecraftforge.resource.PathPackResources;
-import net.minecraftforge.resource.ResourcePackLoader;
 import net.william278.annotaml.Annotaml;
 import net.william278.desertwell.util.Version;
 import net.william278.huskhomes.command.Command;
@@ -76,7 +74,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -86,7 +85,6 @@ public class FabricHuskHomes implements HuskHomes, FabricTask.Supplier,
         FabricEventDispatcher, FabricSafetyResolver {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("HuskHomes");
-    private static Method packResourceGetter;
 
     private MinecraftServer minecraftServer;
     private Map<String, Boolean> permissions;
@@ -364,27 +362,29 @@ public class FabricHuskHomes implements HuskHomes, FabricTask.Supplier,
     @Override
     @Nullable
     public InputStream getResource(@NotNull String name) {
-        return ResourcePackLoader.getPackFor(HuskHomesMod.MODID)
-                .map(pack -> {
+        /*
+        return this.modContainer.findPath(name)
+                .map(path -> {
                     try {
-                        return (InputStream) getPackResourceGetter().invoke(pack, name);
-                    } catch (InvocationTargetException e) {
-                        log(Level.WARNING, "Failed to load resource: " + name, e.getCause());
-                    } catch (NoSuchMethodException | IllegalAccessException e) {
-                        log(Level.SEVERE, "Could not access resource via reflection: " + name, e);
+                        return Files.newInputStream(path);
+                    } catch (IOException e) {
+                        log(Level.WARNING, "Failed to load resource: " + name, e);
                     }
                     return null;
                 })
                 .orElse(this.getClass().getClassLoader().getResourceAsStream(name));
-    }
-
-    @NotNull
-    private static Method getPackResourceGetter() throws NoSuchMethodException {
-        if(packResourceGetter == null){
-            packResourceGetter = PathPackResources.class.getDeclaredMethod("getResource", String.class);
-            packResourceGetter.setAccessible(true);
-        }
-        return packResourceGetter;
+         */
+        Path resourcePath = ModList.get().getModFileById(HuskHomesMod.MODID).getFile().findResource(name);
+        return Optional.of(resourcePath)
+                .map(path -> {
+                    try {
+                        return Files.newInputStream(path);
+                    } catch (IOException e) {
+                        log(Level.WARNING, "Failed to load resource: " + name, e);
+                    }
+                    return null;
+                })
+                .orElse(this.getClass().getClassLoader().getResourceAsStream(name));
     }
 
     @Override
