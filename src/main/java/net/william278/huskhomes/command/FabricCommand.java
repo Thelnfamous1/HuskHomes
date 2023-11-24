@@ -74,10 +74,10 @@ public class FabricCommand {
         permissions.forEach((permission, isOp) -> plugin.getPermissions().put(permission, isOp));
 
         MinecraftForge.EVENT_BUS.addListener((PermissionCheckEvent event) -> {
+            if(event.getState() != Tristate.UNDEFINED) return;
             if (permissions.containsKey(event.getPermission()) && permissions.get(event.getPermission()) && event.getSource().hasPermission(3)) {
                 event.setState(Tristate.TRUE);
             }
-            event.setState(Tristate.UNDEFINED);
         });
 
         /*
