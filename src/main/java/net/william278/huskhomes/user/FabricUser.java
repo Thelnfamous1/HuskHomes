@@ -170,7 +170,7 @@ public class FabricUser extends OnlineUser {
 
     @Override
     public boolean isMoving() {
-        return player.isInWater() || player.isFallFlying() || player.isSprinting() || player.isDiscrete();
+        return player.isSwimming() || player.isFallFlying() || player.isSprinting() || player.isShiftKeyDown();
     }
 
     @Override
