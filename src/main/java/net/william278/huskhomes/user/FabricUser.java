@@ -20,6 +20,7 @@
 package net.william278.huskhomes.user;
 
 import io.netty.buffer.Unpooled;
+import me.Thelnfamous1.huskhomes.HuskHomesTeleporter;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.audience.Audience;
 import net.minecraft.core.BlockPos;
@@ -27,7 +28,10 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.portal.PortalInfo;
+import net.minecraft.world.phys.Vec3;
 import net.william278.huskhomes.FabricHuskHomes;
 import net.william278.huskhomes.position.Location;
 import net.william278.huskhomes.position.Position;
@@ -129,17 +133,26 @@ public class FabricUser extends OnlineUser {
         }
 
 
-        //noinspection ConstantConditions
-        player.teleportTo(
-                server.getLevel(server.levelKeys().stream()
-                        .filter(key -> key.location().equals(ResourceLocation.tryParse(location.getWorld().getName())))
-                        .findFirst().orElseThrow(
-                                () -> new TeleportationException(TeleportationException.Type.WORLD_NOT_FOUND, plugin)
-                        )),
-                location.getX(), location.getY(), location.getZ(),
-                location.getYaw(),
-                location.getPitch()
-        );
+        ServerLevel level = server.getLevel(server.levelKeys().stream()
+                .filter(key -> key.location().equals(ResourceLocation.tryParse(location.getWorld().getName())))
+                .findFirst().orElseThrow(
+                        () -> new TeleportationException(TeleportationException.Type.WORLD_NOT_FOUND, plugin)
+                ));
+        player.stopRiding();
+        if(player.level == level){
+            player.teleportTo(
+                    level,
+                    location.getX(), location.getY(), location.getZ(),
+                    location.getYaw(),
+                    location.getPitch()
+            );
+        } else if(level != null){
+            player.changeDimension(level, new HuskHomesTeleporter(new PortalInfo(
+                    new Vec3(location.getX(), location.getY(), location.getZ()),
+                    Vec3.ZERO,
+                    location.getYaw(),
+                    location.getPitch())));
+        }
 
         /*
         player.stopRiding();
