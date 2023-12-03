@@ -20,4 +20,9 @@ public class HuskHomesTeleporter implements ITeleporter {
     public @Nullable PortalInfo getPortalInfo(Entity entity, ServerLevel destWorld, Function<ServerLevel, PortalInfo> defaultPortalInfo) {
         return this.portalInfo;
     }
+
+    @Override
+    public Entity placeEntity(Entity entity, ServerLevel currentWorld, ServerLevel destWorld, float yaw, Function<Boolean, Entity> repositionEntity) {
+        return repositionEntity.apply(false); // prevents creation of end platform when teleporting to end
+    }
 }
