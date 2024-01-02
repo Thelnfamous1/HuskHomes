@@ -142,6 +142,14 @@ public class Settings {
     @YamlKey("general.strict_tpa_here_requests")
     private boolean strictTpaHereRequests = true;
 
+    @YamlComment("Whether taking damage during a timed teleport will cancel the teleportation")
+    @YamlKey("general.teleport_cancel_damage")
+    private boolean teleportCancelDamage = true;
+
+    @YamlComment("Whether moving during a timed teleport will cancel the teleportation")
+    @YamlKey("general.teleport_cancel_movement")
+    private boolean teleportCancelMovement = true;
+
 
     // Name & description settings
     @YamlComment("Whether home or warp names should be case insensitive (i.e. allow /home HomeOne and /home homeone)")
@@ -415,6 +423,14 @@ public class Settings {
 
     public boolean doStrictTpaHereRequests() {
         return strictTpaHereRequests;
+    }
+
+    public boolean doTeleportCancelDamage(){
+        return teleportCancelDamage;
+    }
+
+    public boolean doTeleportCancelMovement(){
+        return teleportCancelMovement;
     }
 
     public boolean caseInsensitiveNames() {
